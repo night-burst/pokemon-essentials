@@ -389,11 +389,11 @@ class MapScreenScene
   end
 
   def onClick(mapid,x,y)
-    if @lastclick>0 && Graphics.frame_count - @lastclick < Graphics.frame_rate * 0.5
+    if @lastclick>0 && System.delta - @lastclick < 500000
       onDoubleClick(mapid)
       @lastclick=-1
     else
-      @lastclick=Graphics.frame_count
+      @lastclick=System.delta
       if mapid>=0
         @dragging=true
         @dragmapid=mapid

@@ -8,6 +8,7 @@ class Sprite_Reflection
     @event    = event
     @height   = 0
     @fixedheight = false
+    @delta = 0
     if @event && @event!=$game_player
       if @event.name[/reflection\((\d+)\)/i]
         @height = $~[1].to_i || 0
@@ -65,8 +66,7 @@ class Sprite_Reflection
       @sprite.z        = -50   # Still water is -100, map is 0 and above
       @sprite.zoom_x   = @rsprite.zoom_x
       @sprite.zoom_y   = @rsprite.zoom_y
-      frame = (Graphics.frame_count%40)/10
-      @sprite.zoom_x   *= [1.0, 0.95, 1.0, 1.05][frame]
+      @sprite.zoom_x   *= [1.0, 0.95, 1.0, 1.05].frame_ref(@delta)
       @sprite.angle    = 180.0
       @sprite.mirror   = true
       @sprite.bitmap   = @rsprite.bitmap
@@ -82,5 +82,6 @@ class Sprite_Reflection
       end
       @sprite.src_rect = @rsprite.src_rect
     end
+    @delta = System.delta
   end
 end

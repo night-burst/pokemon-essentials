@@ -30,7 +30,7 @@ class BugContestState
     return false if !undecided?
     return false if TimerSeconds<=0
     curtime=@timer+TimerSeconds*Graphics.frame_rate
-    curtime=[curtime-Graphics.frame_count,0].max
+    curtime=[curtime-(System.delta/25000),0].max
     return (curtime<=0)
   end
 
@@ -169,7 +169,7 @@ class BugContestState
     @otherparty=[]
     @lastPokemon=nil
     @lastContest=nil
-    @timer=Graphics.frame_count
+    @timer=System.delta/25000
     @places=[]
     chosenpkmn=$Trainer.party[@chosenPokemon]
     for i in 0...$Trainer.party.length
@@ -242,8 +242,8 @@ class TimerDisplay # :nodoc:
   end
 
   def update
-    curtime=[(@start+@maxtime)-Graphics.frame_count,0].max
-    curtime/=Graphics.frame_rate
+    curtime=[(@start+@maxtime)-(System.delta/25000),0].max
+    curtime/=40 #Graphics.frame_rate
     if curtime != @total_sec
       # Calculate total number of seconds
       @total_sec = curtime

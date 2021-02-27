@@ -311,7 +311,7 @@ class Window
       @cursoropacity=128
     end
     if @pause
-      @pauseframe=(Graphics.frame_count / 8) % 4
+      @pauseframe=System.delta/125000 % 4
       @pauseopacity=[@pauseopacity+64,255].min
       mustchange=true
     end

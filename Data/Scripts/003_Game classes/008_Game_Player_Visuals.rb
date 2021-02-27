@@ -69,7 +69,7 @@ class Game_Player < Game_Character
 
   def update_pattern
     if $PokemonGlobal.surfing || $PokemonGlobal.diving
-      p = ((Graphics.frame_count%60)*@@bobFrameSpeed).floor
+      p = ((System.delta/25000%60)*@@bobFrameSpeed).floor
       @pattern = p if !@lock_pattern
       @pattern_surf = p
       @bob_height = (p>=2) ? 2 : 0

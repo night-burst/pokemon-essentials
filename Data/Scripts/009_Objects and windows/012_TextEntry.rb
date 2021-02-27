@@ -912,6 +912,7 @@ class PokemonEntryScene2
       @cursor2 = AnimatedBitmap.new("Graphics/Pictures/Naming/cursor_2")
       @cursor3 = AnimatedBitmap.new("Graphics/Pictures/Naming/cursor_3")
       @cursorPos = 0
+      @lastUpdate = 0
       updateInternal
     end
 
@@ -1191,7 +1192,7 @@ class PokemonEntryScene2
     for i in 0...3
       @bitmaps[i].update
     end
-    if @init || Graphics.frame_count%5==0
+    if @init || System.delta - @lastUpdate > 125000
       @init = false
       cursorpos = @helper.cursor
       cursorpos = @maxlength-1 if cursorpos>=@maxlength
@@ -1200,6 +1201,7 @@ class PokemonEntryScene2
         @blanks[i] = (i==cursorpos) ? 1 : 0
         @sprites["blank#{i}"].y = [78,82][@blanks[i]]
       }
+      @lastUpdate = System.delta
     end
     pbDoUpdateOverlay
     pbUpdateSpriteHash(@sprites)

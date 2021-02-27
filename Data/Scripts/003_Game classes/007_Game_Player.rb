@@ -13,7 +13,7 @@ class Game_Player < Game_Character
   def initialize(*arg)
     super(*arg)
     @lastdir=0
-    @lastdirframe=0
+    @lastdirtime=0
     @bump_se=0
   end
 
@@ -349,7 +349,7 @@ class Game_Player < Game_Character
            $PokemonTemp.miniupdate || $game_temp.in_menu
       # Move player in the direction the directional button is being pressed
       if @moved_last_frame ||
-         (dir > 0 && dir == @lastdir && Graphics.frame_count - @lastdirframe > Graphics.frame_rate / 20)
+         (dir > 0 && dir == @lastdir && System.delta - @lastdirtime > 75000)
         case dir
         when 2 then move_down
         when 4 then move_left
@@ -366,7 +366,7 @@ class Game_Player < Game_Character
       end
     end
     # Record last direction input
-    @lastdirframe = Graphics.frame_count if dir != @lastdir
+    @lastdirtime = System.delta if dir != @lastdir
     @lastdir      = dir
   end
 

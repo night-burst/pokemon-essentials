@@ -624,3 +624,16 @@ def pbLoadRpgxpScene(scene)
   pbShowObjects(visibleObjects)
   Graphics.transition(20)
 end
+
+
+#===============================================================================
+# Time utilities
+#===============================================================================
+
+class Array
+  # Retrieves an item from an array based on a timestamp (in microseconds)
+  # and an intended FPS animation rate.
+  def frame_ref(base=System.delta, updates_per_second=self.size)
+    return self[(base / (1000000.0 * (1.0 / updates_per_second)).round) % self.size]
+  end
+end

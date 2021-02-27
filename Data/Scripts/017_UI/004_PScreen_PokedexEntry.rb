@@ -112,7 +112,7 @@ class PokemonPokedexInfo_Scene
 
   def pbUpdate
     if @page==2
-      intensity = (Graphics.frame_count%40)*12
+      intensity = (System.delta/25000)*12
       intensity = 480-intensity if intensity>240
       @sprites["areahighlight"].opacity = intensity
     end

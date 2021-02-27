@@ -161,7 +161,7 @@ class CustomTilemap
     [ [37, 38, 43, 44], [37,  6, 43, 44], [13, 18, 19, 24], [13, 14, 43, 44],
       [37, 42, 43, 48], [17, 18, 47, 48], [13, 18, 43, 48], [ 1,  2,  7,  8] ]
   ]
-  Animated_Autotiles_Frames = 5*Graphics.frame_rate/20   # Frequency of updating animated autotiles
+  Animated_Autotiles_Time = 250000   # Frequency of updating animated autotiles (microseconds)
   FlashOpacity = [100,90,80,70,80,90]
 
   def initialize(viewport)
@@ -228,6 +228,8 @@ class CustomTilemap
     @fullyrefreshed      = false
     @fullyrefreshedautos = false
     @shouldWrap          = false
+    @delta               = System.delta
+    @lastrefresh         = @delta
   end
 
   def dispose
@@ -385,7 +387,7 @@ class CustomTilemap
     else
       frames = autotile.width/(3*@tileWidth)
     end
-    return (Graphics.frame_count/Animated_Autotiles_Frames)%frames
+    return (@delta/Animated_Autotiles_Time)%frames
   end
 
   def repaintAutotiles
@@ -438,7 +440,7 @@ class CustomTilemap
     if frames<=1
       anim = 0
     else
-      anim = (Graphics.frame_count/Animated_Autotiles_Frames)%frames
+      anim = (@delta/Animated_Autotiles_Time)%frames
     end
     return if anim<0
     bitmap = @autotileInfo[id]
@@ -874,7 +876,7 @@ class CustomTilemap
               if frames <= 1
                 frame = 0
               else
-                frame = (Graphics.frame_count / Animated_Autotiles_Frames) % frames
+                frame = (@delta/Animated_Autotiles_Time)%frames
               end
               bltAutotile(bitmap, xpos, ypos, id, frame)
             end
@@ -964,6 +966,7 @@ class CustomTilemap
   end
 
   def update
+    @delta = System.delta
     if @haveGraphicsWH
       @graphicsWidth  = Graphics.width
       @graphicsHeight = Graphics.height
@@ -999,7 +1002,7 @@ class CustomTilemap
     end
     refresh_flash if @flashChanged
     refresh_tileset if @tilesetChanged
-    @flash.opacity = FlashOpacity[(Graphics.frame_count / 2) % 6] if @flash
+    @flash.opacity = FlashOpacity.frame_ref(@delta, 20) if @flash
     mustrefresh = (@oldOx != @ox || @oldOy != @oy || @tilesetChanged || @autotiles.changed)
     if @viewport.ox != @oldViewportOx || @viewport.oy != @oldViewportOy
       mustrefresh = true
@@ -1007,9 +1010,10 @@ class CustomTilemap
       @oldViewportOy = @viewport.oy
     end
     refresh if mustrefresh
-    if (Graphics.frame_count % Animated_Autotiles_Frames) == 0 || @nowshown
+    if System.delta - @lastrefresh >= Animated_Autotiles_Time || @nowshown
       repaintAutotiles
       refresh(true)
+      @lastrefresh = System.delta
     end
     @nowshown          = false
     @autotiles.changed = false
