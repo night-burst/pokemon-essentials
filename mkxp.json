@@ -80,7 +80,7 @@
     // Sync screen redraws to the monitor refresh rate
     // (default: disabled)
     //
-    // "vsync": false,
+    "vsync": true,
 
 
     // Specify the window width on startup. If set to 0,
@@ -131,7 +131,7 @@
     // This option may be force-disabled at build time.
     // (default: disabled)
     //
-    // "syncToRefreshrate": false,
+    "syncToRefreshrate": true,
 
 
     // Don't use alpha blending when rendering text
