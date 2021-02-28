@@ -6,7 +6,7 @@
 #  instance of this class.
 #===============================================================================
 class Game_Player < Game_Character
-  attr_accessor :bump_se
+  attr_accessor :bump_delta
   attr_accessor :charsetData
   attr_accessor :encounter_count
 
@@ -14,7 +14,7 @@ class Game_Player < Game_Character
     super(*arg)
     @lastdir=0
     @lastdirtime=0
-    @bump_se=0
+    @bump_delta=0
   end
 
   def map
@@ -59,9 +59,11 @@ class Game_Player < Game_Character
   end
 
   def bump_into_object
-    return if @bump_se && @bump_se>0
+    time = System.delta
+    @bump_delta = 0 if !@bump_delta
+    return if time - @bump_delta < 500000 # was 4 times a second, but twice a second is closer
     pbSEPlay("Player bump")
-    @bump_se = Graphics.frame_rate/4
+    @bump_delta = time
   end
 
   def move_generic(dir, turn_enabled = true)
@@ -332,8 +334,6 @@ class Game_Player < Game_Character
     update_screen_position(last_real_x, last_real_y)
     # Update dependent events
     $PokemonTemp.dependentEvents.updateDependentEvents
-    # Count down the time between allowed bump sounds
-    @bump_se -= 1 if @bump_se && @bump_se>0
     # Finish up dismounting from surfing
     if $PokemonTemp.endSurf && !moving?
       pbCancelVehicles
