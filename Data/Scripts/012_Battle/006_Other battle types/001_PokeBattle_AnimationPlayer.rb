@@ -703,6 +703,8 @@ end
 class PBAnimationPlayerX
   attr_accessor :looping
   MAX_SPRITES = 60
+  FPS = 20 # intended update rate of animations
+  TICKRATE = ((1.0 / FPS) * 1000000).floor
 
   def initialize(animation,user,target,scene=nil,oppMove=false,inEditor=false)
     @animation     = animation
@@ -717,7 +719,8 @@ class PBAnimationPlayerX
     @looping       = false
     @animbitmap    = nil   # Animation sheet graphic
     @frame         = -1
-    @framesPerTick = [Graphics.frame_rate/20,1].max   # 20 ticks per second
+    @lastPlayedFrame = -1
+    @animStartTime = 0
     @srcLine       = nil
     @dstLine       = nil
     @userOrig      = getSpriteCenter(@usersprite)
@@ -782,6 +785,8 @@ class PBAnimationPlayerX
 
   def start
     @frame = 0
+    @lastPlayedFrame = -1
+    @animStartTime = System.delta
   end
 
   def animDone?
@@ -795,12 +800,20 @@ class PBAnimationPlayerX
 
   def update
     return if @frame<0
-    animFrame = @frame/@framesPerTick
+    
+    if @lastPlayedFrame == @frame
+      update_frame
+      return
+    end
+      
+    @frame = @frame
 
     # Loop or end the animation if the animation has reached the end
-    if animFrame >= @animation.length
-      @frame = (@looping) ? 0 : -1
-      if @frame<0
+    if @frame >= @animation.length
+      if @looping
+        start
+      else
+        @frame = -1
         @animbitmap.dispose if @animbitmap
         @animbitmap = nil
         return
@@ -821,8 +834,8 @@ class PBAnimationPlayerX
     @foColor.update
 
     # Update all the sprites to depict the animation's next frame
-    if @framesPerTick==1 || (@frame%@framesPerTick)==0
-      thisframe = @animation[animFrame]
+    #if @framesPerTick==1 || (@frame%@framesPerTick)==0
+      thisframe = @animation[@frame]
       # Make all cel sprites invisible
       for i in 0...MAX_SPRITES
         @animsprites[i].visible = false if @animsprites[i]
@@ -869,8 +882,13 @@ class PBAnimationPlayerX
         sprite.y += 64 if @inEditor
       end
       # Play timings
-      @animation.playTiming(animFrame,@bgGraphic,@bgColor,@foGraphic,@foColor,@oldbg,@oldfo,@user)
-    end
-    @frame += 1
+      @animation.playTiming(@frame,@bgGraphic,@bgColor,@foGraphic,@foColor,@oldbg,@oldfo,@user)
+    #end
+    update_frame # estimate
+    @lastPlayedFrame = @frame
+  end
+
+  def update_frame
+    @frame = (System.delta - @animStartTime) / TICKRATE
   end
 end
