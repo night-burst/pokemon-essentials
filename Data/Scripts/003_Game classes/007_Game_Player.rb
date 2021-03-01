@@ -60,8 +60,7 @@ class Game_Player < Game_Character
 
   def bump_into_object
     time = System.delta
-    @bump_delta = 0 if !@bump_delta
-    return if time - @bump_delta < 500000 # was 4 times a second, but twice a second is closer
+    return if time - (@bump_delta || 0) < 500000 # was 4 times a second, but twice a second is closer
     pbSEPlay("Player bump")
     @bump_delta = time
   end
