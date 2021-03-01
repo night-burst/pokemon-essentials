@@ -585,20 +585,20 @@ class Window_AdvancedTextPokemon < SpriteWindow_Base
     @lastUpdate = System.delta if !@lastUpdate
     frametime = (System.delta - @lastUpdate) / 25000
     return if frametime < 1
+    frametime.times{
     @pausesprite.update if @pausesprite && @pausesprite.visible
     if @waitcount>0
       @waitcount -= 1
       return
     end
     if busy?
-      frametime.times{
         refresh if !@frameskipChanged
         updateInternal
         # following line needed to allow "textspeed=-999" to work seamlessly
         refresh if @frameskipChanged
-      }
     end
     @frameskipChanged = false
+    }
     @lastUpdate = System.delta
   end
 
