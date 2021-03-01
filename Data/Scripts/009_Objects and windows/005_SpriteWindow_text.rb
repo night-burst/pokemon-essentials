@@ -513,9 +513,14 @@ class Window_AdvancedTextPokemon < SpriteWindow_Base
       oldPosition = self.position
       self.text = self.text
       oldPosition = @numtextchars if oldPosition>@numtextchars
+      time = System.delta
       while self.position!=oldPosition
-        refresh
-        updateInternal
+        ((System.delta - time) / 25000).times {|i|
+          puts i.to_s
+          refresh
+          updateInternal
+          time = System.delta
+        }
       end
     else
       self.text = self.text
@@ -577,18 +582,24 @@ class Window_AdvancedTextPokemon < SpriteWindow_Base
 
   def update
     super
+    @lastUpdate = System.delta if !@lastUpdate
+    frametime = (System.delta - @lastUpdate) / 25000
+    return if frametime < 1
     @pausesprite.update if @pausesprite && @pausesprite.visible
     if @waitcount>0
       @waitcount -= 1
       return
     end
     if busy?
-      refresh if !@frameskipChanged
-      updateInternal
-      # following line needed to allow "textspeed=-999" to work seamlessly
-      refresh if @frameskipChanged
+      frametime.times{
+        refresh if !@frameskipChanged
+        updateInternal
+        # following line needed to allow "textspeed=-999" to work seamlessly
+        refresh if @frameskipChanged
+      }
     end
     @frameskipChanged = false
+    @lastUpdate = System.delta
   end
 
   private
