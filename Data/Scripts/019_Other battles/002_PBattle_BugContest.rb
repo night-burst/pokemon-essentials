@@ -13,7 +13,8 @@ class BugContestState
      _INTL("Picnicker Cindy"),
      _INTL("Youngster Samuel")
   ]
-  TimerSeconds = Settings::BUG_CONTEST_TIME
+  TimerMicroSeconds = Settings::BUG_CONTEST_TIME * 1000000
+
 
   def initialize
     clear
@@ -28,10 +29,8 @@ class BugContestState
 
   def expired?
     return false if !undecided?
-    return false if TimerSeconds<=0
-    curtime=@timer+TimerSeconds*Graphics.frame_rate
-    curtime=[curtime-(System.delta/25000),0].max
-    return (curtime<=0)
+    return false if TimerMicroSeconds<=0
+    return System.delta - @timer > TimerMicroSeconds
   end
 
   def clear
@@ -169,7 +168,7 @@ class BugContestState
     @otherparty=[]
     @lastPokemon=nil
     @lastContest=nil
-    @timer=System.delta/25000
+    @timer=System.delta
     @places=[]
     chosenpkmn=$Trainer.party[@chosenPokemon]
     for i in 0...$Trainer.party.length
@@ -242,11 +241,10 @@ class TimerDisplay # :nodoc:
   end
 
   def update
-    curtime=[(@start+@maxtime)-(System.delta/25000),0].max
-    curtime/=40 #Graphics.frame_rate
+    curtime=System.delta - @start
     if curtime != @total_sec
       # Calculate total number of seconds
-      @total_sec = curtime
+      @total_sec = curtime / 1000000
       # Make a string for displaying the timer
       min = @total_sec / 60
       sec = @total_sec % 60
@@ -300,10 +298,10 @@ Events.onMapChange += proc { |_sender,_e|
 
 Events.onMapSceneChange += proc { |_sender,e|
   scene=e[0]
-  if pbInBugContest? && pbBugContestState.decision==0 && BugContestState::TimerSeconds>0
+  if pbInBugContest? && pbBugContestState.decision==0 && BugContestState::TimerMicroSeconds>0
     scene.spriteset.addUserSprite(TimerDisplay.new(
        pbBugContestState.timer,
-       BugContestState::TimerSeconds*Graphics.frame_rate))
+       BugContestState::TimerMicroSeconds))
   end
 }
 
