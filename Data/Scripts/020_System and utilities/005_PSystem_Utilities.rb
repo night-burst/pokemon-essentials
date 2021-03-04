@@ -637,3 +637,11 @@ class Array
     return self[(base / (1000000.0 * (1.0 / updates_per_second)).round) % self.size]
   end
 end
+
+class Numeric
+  # Adjusts a number by how long it has been since the previous frame
+  # was rendered, compared to an intended framerate of 40 (25ms)
+  def interpolate
+    self * (Graphics.delta / 25000.0)
+  end
+end

@@ -61,7 +61,7 @@ class Game_Character
     @direction_fix             = false
     @always_on_top             = false
     @anime_count               = 0
-    @stop_count                = 0
+    @last_move                 = 0
     @jump_peak                 = 0   # Max height while jumping
     @jump_distance             = 0   # Total distance of jump
     @jump_distance_left        = 0   # Distance left to travel
@@ -85,7 +85,7 @@ class Game_Character
     # 4 => 25.6   # 5 frames per tile - running speed (2x walking speed)
     # 5 => 32     # 4 frames per tile - cycling speed (1.25x running speed)
     # 6 => 64     # 2 frames per tile
-    self.move_speed_real = (val == 6) ? 64 : (val == 5) ? 32 : (2 ** (val + 1)) * 0.8
+    self.move_speed_real = (val == 6) ? 64 : (val == 5) ? 32 : (2 ** (val + 1))
   end
 
   def move_speed_real
@@ -94,16 +94,16 @@ class Game_Character
   end
 
   def move_speed_real=(val)
-    @move_speed_real = val * 40.0 / Graphics.frame_rate
+    @move_speed_real = val #* 40.0 / Graphics.frame_rate
   end
 
   def jump_speed_real
-    self.jump_speed_real = (2 ** (3 + 1)) * 0.8 if !@jump_speed_real   # 3 is walking speed
+    self.jump_speed_real = (2 ** (3 + 1)) if !@jump_speed_real   # 3 is walking speed
     return @jump_speed_real
   end
 
   def jump_speed_real=(val)
-    @jump_speed_real = val * 40.0 / Graphics.frame_rate
+    @jump_speed_real = val #* 40.0 / Graphics.frame_rate
   end
 
   def move_frequency=(val)
@@ -121,6 +121,7 @@ class Game_Character
     # 5 => 30    # 0.75 seconds
     # 6 => 0     # 0 seconds, i.e. continuous movement
     self.move_frequency_real = (40 - val * 2) * (6 - val)
+    self.move_frequency_real *= 25000
   end
 
   def move_frequency_real
@@ -129,7 +130,7 @@ class Game_Character
   end
 
   def move_frequency_real=(val)
-    @move_frequency_real = val * Graphics.frame_rate / 40.0
+    @move_frequency_real = val #* Graphics.frame_rate / 40.0
   end
 
   def bob_height
@@ -305,7 +306,7 @@ class Game_Character
   end
 
   def increase_steps
-    @stop_count = 0
+    @last_move = System.delta
     triggerLeaveTile
   end
 
@@ -316,7 +317,7 @@ class Game_Character
     case rand(6)
     when 0..3 then move_random
     when 4    then move_forward
-    when 5    then @stop_count = 0
+    when 5    then @last_move = System.delta
     end
   end
 
@@ -348,7 +349,7 @@ class Game_Character
             @move_route_index = @original_move_route_index
             @original_move_route = nil
           end
-          @stop_count = 0
+          @last_move = System.delta
         end
         return
       end
@@ -662,7 +663,7 @@ class Game_Character
         @jump_speed_real = nil   # Reset jump speed
         @jump_count = Game_Map::REAL_RES_X / jump_speed_real   # Number of frames to jump one tile
       end
-      @stop_count = 0
+      @last_move = System.delta
       if self.is_a?(Game_Player)
         $PokemonTemp.dependentEvents.pbMoveDependentEvents
       end
@@ -692,7 +693,7 @@ class Game_Character
     return if @direction_fix
     oldDirection = @direction
     @direction = dir
-    @stop_count = 0
+    @last_move = System.delta
     pbCheckEventTriggerAfterTurning if dir != oldDirection
   end
 
@@ -797,7 +798,7 @@ class Game_Character
     # 4 => @stop_count > 64    # 1.6 seconds
     # 5 => @stop_count > 30    # 0.75 seconds
     # 6 => @stop_count > 0     # 0 seconds
-    if @stop_count >= self.move_frequency_real
+    if (System.delta - (@last_move || System.delta)) >= self.move_frequency_real
       case @move_type
       when 1 then move_type_random
       when 2 then move_type_toward_player
@@ -812,17 +813,17 @@ class Game_Character
     dest_x = @x * Game_Map::REAL_RES_X
     dest_y = @y * Game_Map::REAL_RES_Y
     if @real_x < dest_x
-      @real_x += distance
+      @real_x += distance.interpolate
       @real_x = dest_x if @real_x > dest_x - 0.1
     else
-      @real_x -= distance
+      @real_x -= distance.interpolate
       @real_x = dest_x if @real_x < dest_x + 0.1
     end
     if @real_y < dest_y
-      @real_y += distance
+      @real_y += distance.interpolate
       @real_y = dest_y if @real_y > dest_y - 0.1
     else
-      @real_y -= distance
+      @real_y -= distance.interpolate
       @real_y = dest_y if @real_y < dest_y + 0.1
     end
     # Refresh how far is left to travel in a jump
@@ -839,7 +840,7 @@ class Game_Character
 
   def update_stop
     @anime_count += 1 if @step_anime
-    @stop_count  += 1 if !@starting && !lock?
+    @last_move = System.delta if @starting || lock?
     @moved_this_frame = false
   end
 
@@ -862,7 +863,7 @@ class Game_Character
     # it takes to move half a tile (or a whole tile if cycling). We assume the
     # game uses square tiles.
     real_speed = (jumping?) ? jump_speed_real : move_speed_real
-    frames_per_pattern = Game_Map::REAL_RES_X / (real_speed * 2.0)
+    frames_per_pattern = (Game_Map::REAL_RES_X / real_speed) / 1.interpolate
     frames_per_pattern *= 2 if move_speed == 6   # Cycling/fastest speed
     return if @anime_count < frames_per_pattern
     # Advance to the next animation frame
