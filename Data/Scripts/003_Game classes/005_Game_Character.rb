@@ -863,7 +863,7 @@ class Game_Character
     # it takes to move half a tile (or a whole tile if cycling). We assume the
     # game uses square tiles.
     real_speed = (jumping?) ? jump_speed_real : move_speed_real
-    frames_per_pattern = (Game_Map::REAL_RES_X / real_speed) / 1.interpolate
+    frames_per_pattern = (Game_Map::REAL_RES_X / real_speed) / 2.interpolate
     frames_per_pattern *= 2 if move_speed == 6   # Cycling/fastest speed
     return if @anime_count < frames_per_pattern
     # Advance to the next animation frame
